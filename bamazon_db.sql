@@ -5,7 +5,7 @@ USE bamazon_db;
 CREATE TABLE products (
     item_id INTEGER(11) AUTO_INCREMENT PRIMARY KEY NOT NULL,
     product_name VARCHAR(100) NOT NULL,
-    product_sales INTEGER(11) DEFAULT 0,
+    product_sales DECIMAL(10,2) DEFAULT 0,
     department_name VARCHAR(100),
     price DECIMAL(10,2) NOT NULL,
     stock_quantity INTEGER(11) NOT NULL DEFAULT 0
@@ -22,3 +22,10 @@ INSERT INTO products (product_name, department_name, price) VALUES
 ("Microsoft Surface Dock", "Computers & Accessories", 125.99),
 ("Apple iPad with WiFi, 32GB, Space Grey", "Computers & Accessories", 329.99),
 ("AmazonBasics Adjustable Tablet Stand", "Computers & Accessories", 8.99);
+
+
+CREATE TABLE departments (
+    department_id INTEGER(11) AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    department_name VARCHAR(100) NOT NULL,
+    over_head_costs DECIMAL(10,2) NOT NULL
+);
