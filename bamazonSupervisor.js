@@ -51,8 +51,36 @@ function runSupervisor() {
             });
         }
         else if (supervisorChoices.indexOf(superResponse.choice) === 1) {
-            
-            runSupervisor();
+            inquirer.prompt([
+                {
+                    type: "input",
+                    message: "What is the new department named?",
+                    name: "deptName"
+                }
+            ]).then(function(superResponse1) {
+                inquirer.prompt([
+                    {
+                        type: "input",
+                        message: "What's the overhead for " + superResponse1.deptName + "?",
+                        name: "deptOverhead",
+                        validate: function (value) {
+                            if (value.match(/[0-9]+\.[0-9]{2}/)) return true;
+                            return "You need to enter an amount in USD (#.##)";
+                        }
+                    }
+                ]).then(function(superResponse2) {
+                    connection.query("INSERT INTO departments (department_name, over_head_costs) VALUES (?, ?)", [ superResponse1.deptName, parseFloat(superResponse2.deptOverhead) ], function(error, response) {
+                        if (error) throw error;
+                        if (response.affectedRows === 0) {
+                            console.log("Failed to add item");
+                        }
+                        else {
+                            console.log("Added " + superResponse1.deptName + " department to Bamazon!");
+                        }
+                        runSupervisor();
+                    });
+                });
+            });
         }
         else {
             console.log("Goodbye");
