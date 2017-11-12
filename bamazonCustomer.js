@@ -48,7 +48,7 @@ function runCustomer(query) {
                     name: "itemQuant",
                     validate: function (value) {
                         if (value.match(/[0-9]/)) return true;
-                        return "You need to enter a quantity";
+                        return "You need to enter a numerical quantity";
                     }
                 }
             ]).then(function(quantResponse) {
@@ -61,7 +61,7 @@ function runCustomer(query) {
                         console.log("ORDER COMPLETE!");
                         var totalPrice = parseFloat(productArr[idResponse.itemId].price) * parseInt(quantResponse.itemQuant);
                         console.log("You paid: $" + totalPrice);
-                    }    
+                    }
                 });
             });
         });
