@@ -1,69 +1,77 @@
 var inquirer = require("inquirer");
 var connection = require("./connection.js")
 
-
-runCustomer();
-
-function runCustomer(query) {
-    var productArr = [0];
-    connection.query("SELECT item_id, product_name, price FROM products", function(error, response) {
-        if (error) throw error;
-        for (var i = 0; i < response.length; i++) {
-            productArr.push(response[i]);
-            for (var key in response[i]) {
-                process.stdout.write(response[i][key] + "\t");
-            }
-            console.log();
-        }
-        inquirer.prompt([
+var maxID = 0;
+var questions = [
             {
                 type: "input",
                 message: "What is the ID of the product you want to buy? [Quit with Q]",
-                name: "itemId",
-                validate: function (value) {
-                    if (value.match(/[0-9]/) || value.match(/q/i)) return true;
-                    return "You need to enter an ID number";
+                name: "id",
+                validate: function (answers) {
+                    var num = parseInt(answers);
+                    if (Number.isInteger(num) && (num >= 0) && (num <= maxID)) return true;
+                    if (answers.match(/q/i)) return true;
+                    return "You need to enter a valid ID number";
+                }
+            }, {
+                type: "input",
+                message: "How many units would you like to buy? [Quit with Q]",
+                name: "quantity",
+                validate: function (answers) {
+                    var num = parseInt(answers);
+                    if (Number.isInteger(num) && (num >= 0)) return true;
+                    if (answers.match(/q/i)) return true;
+                    return "You need to enter a positive integer";
+                },
+                when: function (answers) {
+                    if (answers.id.match(/q/i)) return false; // don't ask this question
+                    return true;
                 }
             }
-        ]).then(function(idResponse) {
-            if (idResponse.itemId.match(/q/i)) {
+];
+
+
+function runCustomer(query) {
+    var productArr = [0];
+    connection.query(
+            "SELECT item_id, product_name, price FROM products",
+            function(selectErr, selectRes) {
+        if (selectErr) throw selectErr;
+        maxID = selectRes.length;
+        for (var i = 0; i < selectRes.length; i++) {
+            productArr.push(selectRes[i]);
+            for (var key in selectRes[i]) {
+                process.stdout.write(selectRes[i][key] + "\t");
+            }
+            console.log();
+        }
+        inquirer.prompt(questions).then(function(answers) {
+            if ((answers.id.match(/q/i)) || (answers.quantity.match(/q/i))) {
                 connection.end();
                 return;
             }
-            inquirer.prompt([
-                {
-                    type: "input",
-                    message: "How many units would you like to buy? [Quit with Q]",
-                    name: "itemQuant",
-                    validate: function (value) {
-                        if (value.match(/[0-9]/) || value.match(/q/i)) return true;
-                        return "You need to enter a numerical quantity";
-                    }
-                }
-            ]).then(function(quantResponse) {
-                if (quantResponse.itemQuant.match(/q/i)) {
-                    connection.end();
-                    return;
-                }
-                connection.query("UPDATE products SET product_sales = (product_sales + (price * ?)), stock_quantity = (stock_quantity - ?) WHERE item_id = ? AND stock_quantity >= ?", [ parseInt(quantResponse.itemQuant), parseInt(quantResponse.itemQuant), parseInt(idResponse.itemId), parseInt(quantResponse.itemQuant) ], function(error2, response2) {
-                    if (error2) throw error2;
-                    if (response2.affectedRows === 0) {
-                        console.log("INSUFFICIENT QUANTITY");
-                    }
-                    else {
-                        console.log("ORDER COMPLETE!");
-                        var totalPrice = (parseFloat(productArr[idResponse.itemId].price) * parseInt(quantResponse.itemQuant)).toFixed(2);
-                        console.log("You paid: $" + totalPrice);
-                    }
-                    runCustomer();
-                });
+
+            var quantity = parseInt(answers.quantity);
+            var id = parseInt(answers.id);
+            var totalPrice = parseFloat((parseFloat(productArr[id].price) * quantity).toFixed(2));
+            connection.query(
+                    "UPDATE products " +
+                    "SET product_sales = (product_sales + ?), " +
+                    "stock_quantity = (stock_quantity - ?) " +
+                    "WHERE item_id = ? AND stock_quantity >= ?",
+                    [ totalPrice, quantity, id, quantity ],
+                    function(updateError, updateRes) {
+                if (updateError) throw updateError;
+                if (updateRes.affectedRows === 0) console.log("INSUFFICIENT QUANTITY");
+                else console.log("ORDER COMPLETE! You paid: $" + totalPrice);
+                runCustomer();
             });
         });
     });
 }
 
 
-
+runCustomer();
 
 
 
