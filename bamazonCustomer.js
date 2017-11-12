@@ -67,7 +67,7 @@ function runCustomer(query) {
                     }
                     else {
                         console.log("ORDER COMPLETE!");
-                        var totalPrice = parseFloat(productArr[idResponse.itemId].price) * parseInt(quantResponse.itemQuant);
+                        var totalPrice = (parseFloat(productArr[idResponse.itemId].price) * parseInt(quantResponse.itemQuant)).toFixed(2);
                         console.log("You paid: $" + totalPrice);
                     }
                     runCustomer();

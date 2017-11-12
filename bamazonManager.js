@@ -43,7 +43,6 @@ function runManager() {
                 }
                 runManager();
             });
-
         }
         else if (managerChoices.indexOf(managerResponse.choice) === 1) {
             // view low inventory
@@ -105,17 +104,16 @@ function runManager() {
                     });
                 });
             });
-            
         }
         else if (managerChoices.indexOf(managerResponse.choice) === 3) {
             // Add new product
-            //   * If a manager selects `Add New Product`, it should allow the manager to add a completely new product to the store.
             inquirer.prompt([
                 {
                     type: "input",
                     message: "What is the name of the product you would like to add?",
                     name: "itemName"
                 }
+                // TODO: Add list for departments available
             ]).then(function(addResponse1) {
                 inquirer.prompt([
                     {

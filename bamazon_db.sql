@@ -12,20 +12,38 @@ CREATE TABLE products (
 );
 
 
-INSERT INTO products (product_name, department_name, price) VALUES
-("Fujifilm Instax Mini 9", "Camera & Photo", 59.66),
-("Polaroid 2x3 inch Premium Photo Paper", "Camera & Photo", 23.38),
-("Small Compact Lightweight Binoculars", "Camera & Photo", 22.99),
-("Monocular Telescope, 16X52 Dual Focus", "Camera & Photo", 18.98),
-("Celestron 21035 70mm Travel Scope", "Camera & Photo", 59.99),
-("Nikon AF-S DX NIKKOR 35mm f/1.8G Lens", "Camera & Photo", 166.95),
-("Microsoft Surface Dock", "Computers & Accessories", 125.99),
-("Apple iPad with WiFi, 32GB, Space Grey", "Computers & Accessories", 329.99),
-("AmazonBasics Adjustable Tablet Stand", "Computers & Accessories", 8.99);
+INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES
+("Fujifilm Instax Mini 9", "Camera & Photo", 59.66, 3),
+("Polaroid 2x3 inch Premium Photo Paper", "Camera & Photo", 23.38, 22),
+("Small Compact Lightweight Binoculars", "Camera & Photo", 22.99, 104),
+("Monocular Telescope, 16X52 Dual Focus", "Camera & Photo", 18.98, 67),
+("Celestron 21035 70mm Travel Scope", "Camera & Photo", 59.99, 200),
+("Nikon AF-S DX NIKKOR 35mm f/1.8G Lens", "Camera & Photo", 166.95, 4),
+("Microsoft Surface Dock", "Computers & Accessories", 125.99, 20),
+("Apple iPad with WiFi, 32GB, Space Grey", "Computers & Accessories", 329.99, 0),
+("AmazonBasics Adjustable Tablet Stand", "Computers & Accessories", 8.99, 8);
 
 
 CREATE TABLE departments (
     department_id INTEGER(11) AUTO_INCREMENT PRIMARY KEY NOT NULL,
     department_name VARCHAR(100) NOT NULL,
-    over_head_costs DECIMAL(10,2) NOT NULL
+    over_head_costs DECIMAL(10,2) NOT NULL DEFAULT 1000
 );
+
+INSERT INTO departments (department_name, over_head_costs) VALUES
+("Camera & Photo", 3000),
+("Computers & Accessories", 4500);
+
+
+SELECT b.department_id,
+    b.department_name,
+    b.over_head_costs,
+    a.total_product_sales,
+    b.over_head_costs - a.total_product_sales AS total_profit
+FROM (SELECT department_name,
+        SUM(product_sales) AS total_product_sales
+    FROM products
+    GROUP BY department_name) a
+JOIN departments b
+ON a.department_name = b.department_name;
+
