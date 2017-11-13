@@ -103,13 +103,13 @@ function addInventory() {
         var id = parseInt(productInfo[0]);
         var quantity = parseInt(addAnswers.quantity);
         connection.query(
-                "UPDATE products " +
-                "SET stock_quantity = (stock_quantity + ?) " +
-                "WHERE item_id = ?",
-                [ quantity, id ],
+            "UPDATE products " +
+            "SET stock_quantity = (stock_quantity + ?) " +
+            "WHERE item_id = ?",
+            [ quantity, id ],
             function(updateErr, updateRes) {
             if (updateErr) throw updateErr;
-            if (updateRes.affectedRows === 0) console.log("Failed to add stock");
+            if (!updateRes.affectedRows) console.log("Failed to add stock");
             else console.log("Added " + quantity + " of " + productInfo[1] + "!");
             runManager();
         });
@@ -119,35 +119,37 @@ function addInventory() {
 
 function runManager() {
     inquirer.prompt(questions).then(function(answers) {
-        if (managerChoices.indexOf(answers.choice) === 0) {
-            console.log("ALL INVENTORY");
-            runSelectQuery(true);
-        }
-        else if (managerChoices.indexOf(answers.choice) === 1) {
-            console.log("LOW INVENTORY");
-            runSelectQuery(true, "WHERE stock_quantity < 5");
-        }
-        else if (managerChoices.indexOf(answers.choice) === 2) {
-            runSelectQuery(false);
-        }
-        else if (managerChoices.indexOf(answers.choice) === 3) {
-            inquirer.prompt(newQuestions).then(function(newAnswers) {
-                connection.query(
+        switch (managerChoices.indexOf(answers.choice)) {
+            case 0:
+                console.log("ALL INVENTORY");
+                runSelectQuery(true);
+                break;
+            case 1:
+                console.log("LOW INVENTORY");
+                runSelectQuery(true, "WHERE stock_quantity < 5");
+                break;
+            case 2:
+                runSelectQuery(false);
+                break;
+            case 3:
+                inquirer.prompt(newQuestions).then(function(newAnswers) {
+                    connection.query(
                         "INSERT INTO products " +
                         "(product_name, department_name, price, stock_quantity) " +
                         "VALUES (?, ?, ?, ?)",
                         [ newAnswers.name, newAnswers.department, parseFloat(newAnswers.price), parseInt(newAnswers.quantity) ],
                         function(insertErr, insertRes) {
-                    if (insertErr) throw insertErr;
-                    if (insertRes.affectedRows === 0) console.log("Failed to add item");
-                    else console.log("Added " + parseInt(newAnswers.quantity) + " of " + newAnswers.name + " to Bamazon!");
-                    runManager();
+                        if (insertErr) throw insertErr;
+                        if (!insertRes.affectedRows) console.log("Failed to add item");
+                        else console.log("Added " + parseInt(newAnswers.quantity) + " of " + newAnswers.name + " to Bamazon!");
+                        runManager();
+                    });
                 });
-            });
-        }
-        else {
-            console.log("Goodbye");
-            connection.end();
+                break;
+            default:
+                console.log("Goodbye");
+                connection.end();
+                break;
         }
     });
 }

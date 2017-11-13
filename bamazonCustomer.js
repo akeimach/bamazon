@@ -62,7 +62,7 @@ function runCustomer(query) {
                     [ totalPrice, quantity, id, quantity ],
                     function(updateErr, updateRes) {
                 if (updateErr) throw updateErr;
-                if (updateRes.affectedRows === 0) console.log("INSUFFICIENT QUANTITY");
+                if (!updateRes.affectedRows) console.log("INSUFFICIENT QUANTITY");
                 else console.log("ORDER COMPLETE! You paid: $" + totalPrice);
                 runCustomer();
             });
