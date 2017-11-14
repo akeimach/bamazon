@@ -1,5 +1,5 @@
 var inquirer = require("inquirer");
-var connection = require("./connection.js")
+var connection = require("./connection.js");
 
 var maxID = 0;
 var questions = [
@@ -50,7 +50,6 @@ function runCustomer(query) {
                 connection.end();
                 return;
             }
-
             var quantity = parseInt(answers.quantity);
             var id = parseInt(answers.id);
             var totalPrice = parseFloat((parseFloat(productArr[id].price) * quantity).toFixed(2));

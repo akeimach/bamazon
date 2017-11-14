@@ -1,5 +1,5 @@
 var inquirer = require("inquirer");
-var connection = require("./connection.js")
+var connection = require("./connection.js");
 
 var productArr = [0];
 var itemChoices = [];
@@ -48,7 +48,7 @@ var newQuestions = [
             name: "price",
             validate: function (answers) {
                 var num = parseFloat(answers);
-                if ((answers.match(/[0-9]+\.[0-9]{2}/)) && (num >= 0)) return true;
+                if ((num.match(/[0-9]+\.[0-9]{2}/)) && (num >= 0)) return true;
                 return "You need to enter an amount in USD (#.##)";
             }
         }, {
@@ -62,6 +62,28 @@ var newQuestions = [
             }
         }
     ];
+
+
+
+function queryTable(queryStr, callback) {
+    var table = new cliTable({
+        head: ["Department ID","Department Name","Overhead Costs","Product Sales","Total Profit"],
+        colWidths: [10, 10, 10, 10, 10]
+    });
+    connection.query(queryStr, function(selectErr, selectRes) {
+        if (selectErr) throw selectErr;
+        for (var i = 0; i < selectRes.length; i++) {
+            var row = [];
+            for (var key in selectRes[i]) {
+                row.push(selectRes[i][key]);
+            }
+            table.push(row);
+        }
+        console.log(table.toString());
+        callback();
+    });
+}
+
 
 
 function runSelectQuery(runLog, queryStr) {
