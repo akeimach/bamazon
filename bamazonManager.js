@@ -47,8 +47,7 @@ var newQuestions = [
             message: "How much does it cost?",
             name: "price",
             validate: function (answers) {
-                var num = parseFloat(answers);
-                if ((num.match(/[0-9]+\.[0-9]{2}/)) && (num >= 0)) return true;
+                if ((answers.match(/[0-9]+\.[0-9]{2}/)) && (parseFloat(answers) >= 0)) return true;
                 return "You need to enter an amount in USD (#.##)";
             }
         }, {
