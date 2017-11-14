@@ -34,16 +34,3 @@ INSERT INTO departments (department_name, over_head_costs) VALUES
 ("Camera & Photo", 3000),
 ("Computers & Accessories", 4500);
 
-
-SELECT b.department_id,
-    b.department_name,
-    b.over_head_costs,
-    a.total_product_sales,
-    b.over_head_costs - a.total_product_sales AS total_profit
-FROM (SELECT department_name,
-        SUM(product_sales) AS total_product_sales
-    FROM products
-    GROUP BY department_name) a
-JOIN departments b
-ON a.department_name = b.department_name;
-
