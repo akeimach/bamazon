@@ -1,5 +1,6 @@
 var inquirer = require("inquirer");
 var connection = require("./connection.js");
+var cliTable = require("cli-table");
 
 var productArr = [0];
 var itemChoices = [];
@@ -63,18 +64,21 @@ var newQuestions = [
     ];
 
 
-
 function queryTable(queryStr, callback) {
     var table = new cliTable({
-        head: ["Department ID","Department Name","Overhead Costs","Product Sales","Total Profit"],
-        colWidths: [10, 10, 10, 10, 10]
+        head: ["ID","Product Name","Price","Stock"],
+        colWidths: [5, 25, 10, 10],
+        colAligns: ["left", "left", "right", "right"]
     });
     connection.query(queryStr, function(selectErr, selectRes) {
         if (selectErr) throw selectErr;
         for (var i = 0; i < selectRes.length; i++) {
             var row = [];
             for (var key in selectRes[i]) {
-                row.push(selectRes[i][key]);
+                if (key === "price") {
+                    row.push("$" + selectRes[i][key].toFixed(2));
+                }
+                else row.push(selectRes[i][key]);
             }
             table.push(row);
         }
@@ -84,55 +88,33 @@ function queryTable(queryStr, callback) {
 }
 
 
-
-function runSelectQuery(runLog, queryStr) {
+function addInventory() {
     connection.query(
-        "SELECT item_id, " +
-            "product_name, " +
-            "price, " +
-            "stock_quantity " +
-        "FROM products " + queryStr,
-        function(selectErr, selectRes) {
+            "SELECT item_id, " +
+                "product_name, " +
+                "price, " +
+                "stock_quantity " +
+            "FROM products",
+            function(selectErr, selectRes) {
         if (selectErr) throw selectErr;
-        productArr = [0];
-        // itemChoices = []; // don't reset because inquirer will break
         for (var i = 0; i < selectRes.length; i++) {
-            productArr.push(selectRes[i]);
             itemChoices[i] = selectRes[i].item_id + ") " + selectRes[i].product_name;
         }
-        if (runLog) logSelectQuery();
-        else addInventory();
-    });
-}
-
-
-function logSelectQuery() {
-    console.log("Item ID\tProduct Name\tPrice\tStock Quantity");
-    for (var i = 1; i < productArr.length; i++) {
-        for (var key in productArr[i]) {
-            process.stdout.write(productArr[i][key] + "\t");
-        }
-        console.log();
-    }
-    runManager();
-}
-
-
-function addInventory() {
-    inquirer.prompt(addQuestions).then(function(addAnswers) {
-        var productInfo = addAnswers.name.split(") ");
-        var id = parseInt(productInfo[0]);
-        var quantity = parseInt(addAnswers.quantity);
-        connection.query(
-            "UPDATE products " +
-            "SET stock_quantity = (stock_quantity + ?) " +
-            "WHERE item_id = ?",
-            [ quantity, id ],
-            function(updateErr, updateRes) {
-            if (updateErr) throw updateErr;
-            if (!updateRes.affectedRows) console.log("Failed to add stock");
-            else console.log("Added " + quantity + " of " + productInfo[1] + "!");
-            runManager();
+        inquirer.prompt(addQuestions).then(function(addAnswers) {
+            var productInfo = addAnswers.name.split(") ");
+            var id = parseInt(productInfo[0]);
+            var quantity = parseInt(addAnswers.quantity);
+            connection.query(
+                    "UPDATE products " +
+                    "SET stock_quantity = (stock_quantity + ?) " +
+                    "WHERE item_id = ?",
+                    [ quantity, id ],
+                    function(updateErr, updateRes) {
+                if (updateErr) throw updateErr;
+                if (!updateRes.affectedRows) console.log("Failed to add stock");
+                else console.log("Added " + quantity + " of " + productInfo[1] + "!");
+                runManager();
+            });
         });
     });
 }
@@ -143,23 +125,36 @@ function runManager() {
         switch (managerChoices.indexOf(answers.choice)) {
             case 0:
                 console.log("ALL INVENTORY");
-                runSelectQuery(true);
+                var queryStr =
+                    "SELECT item_id, " +
+                        "product_name, " +
+                        "price, " +
+                        "stock_quantity " +
+                    "FROM products";
+                queryTable(queryStr, runManager);
                 break;
             case 1:
                 console.log("LOW INVENTORY");
-                runSelectQuery(true, "WHERE stock_quantity < 5");
+                var queryStr =
+                    "SELECT item_id, " +
+                        "product_name, " +
+                        "price, " +
+                        "stock_quantity " +
+                    "FROM products " +
+                    "WHERE stock_quantity < 5";
+                queryTable(queryStr, runManager);
                 break;
             case 2:
-                runSelectQuery(false);
+                addInventory();
                 break;
             case 3:
                 inquirer.prompt(newQuestions).then(function(newAnswers) {
                     connection.query(
-                        "INSERT INTO products " +
-                        "(product_name, department_name, price, stock_quantity) " +
-                        "VALUES (?, ?, ?, ?)",
-                        [ newAnswers.name, newAnswers.department, parseFloat(newAnswers.price), parseInt(newAnswers.quantity) ],
-                        function(insertErr, insertRes) {
+                            "INSERT INTO products " +
+                            "(product_name, department_name, price, stock_quantity) " +
+                            "VALUES (?, ?, ?, ?)",
+                            [ newAnswers.name, newAnswers.department, parseFloat(newAnswers.price), parseInt(newAnswers.quantity) ],
+                            function(insertErr, insertRes) {
                         if (insertErr) throw insertErr;
                         if (!insertRes.affectedRows) console.log("Failed to add item");
                         else console.log("Added " + parseInt(newAnswers.quantity) + " of " + newAnswers.name + " to Bamazon!");
@@ -177,4 +172,3 @@ function runManager() {
 
 
 runManager();
-

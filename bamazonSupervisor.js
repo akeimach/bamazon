@@ -2,7 +2,6 @@ var inquirer = require("inquirer");
 var connection = require("./connection.js");
 var cliTable = require("cli-table");
 
-
 var supervisorChoices = ["View Product Sales by Department", "Create New Department", "Quit"];
 
 var questions = [
@@ -34,14 +33,18 @@ var deptQuestions = [
 function queryTable(queryStr, callback) {
     var table = new cliTable({
         head: ["ID","Department Name","Overhead","Product Sales","Total Profit"],
-        colWidths: [5, 20, 15, 15, 15]
+        colWidths: [5, 20, 15, 15, 15],
+        colAligns: ["left", "left", "right", "right", "right"]
     });
     connection.query(queryStr, function(selectErr, selectRes) {
         if (selectErr) throw selectErr;
         for (var i = 0; i < selectRes.length; i++) {
             var row = [];
             for (var key in selectRes[i]) {
-                row.push(selectRes[i][key]);
+                if ((key === "over_head_costs") || (key === "total_product_sales") || (key === "total_profit")) {
+                    row.push("$" + selectRes[i][key].toFixed(2));
+                }
+                else row.push(selectRes[i][key]);
             }
             table.push(row);
         }
@@ -50,8 +53,7 @@ function queryTable(queryStr, callback) {
     });
 }
 
-// TODO: add $ sign for money values
-// TODO: Add department_ids on the fly
+
 function runSupervisor() {
     inquirer.prompt(questions).then(function(answers) {
         switch (supervisorChoices.indexOf(answers.choice)) {
@@ -71,11 +73,11 @@ function runSupervisor() {
             case 1:
                 inquirer.prompt(deptQuestions).then(function(deptAnswers) {
                     connection.query(
-                        "INSERT INTO departments " +
-                        "(department_name, over_head_costs) " +
-                        "VALUES (?, ?)",
-                        [ deptAnswers.department, parseFloat(deptAnswers.overhead) ],
-                        function(insertErr, insertRes) {
+                            "INSERT INTO departments " +
+                            "(department_name, over_head_costs) " +
+                            "VALUES (?, ?)",
+                            [ deptAnswers.department, parseFloat(deptAnswers.overhead) ],
+                            function(insertErr, insertRes) {
                         if (insertErr) throw insertErr;
                         if (!insertRes.affectedRows) console.log("Failed to add item");
                         else console.log("Added " + deptAnswers.department + " department to Bamazon!");
@@ -90,7 +92,6 @@ function runSupervisor() {
         }
     });
 }
-
 
 
 runSupervisor();

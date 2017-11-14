@@ -1,7 +1,9 @@
 var inquirer = require("inquirer");
 var connection = require("./connection.js");
+var cliTable = require("cli-table");
 
 var maxID = 0;
+var productArr = [0];
 var questions = [
         {
             type: "input",
@@ -32,19 +34,31 @@ var questions = [
 
 
 function runCustomer(query) {
-    var productArr = [0];
+    var table = new cliTable({
+        head: ["ID","Product Name","Price"],
+        colWidths: [5, 30, 10],
+        colAligns: ["left", "left", "right"]
+    });
     connection.query(
-            "SELECT item_id, product_name, price FROM products",
+            "SELECT item_id, " +
+                "product_name, " +
+                "price " +
+            "FROM products",
             function(selectErr, selectRes) {
         if (selectErr) throw selectErr;
         maxID = selectRes.length;
         for (var i = 0; i < selectRes.length; i++) {
-            productArr.push(selectRes[i]);
+            productArr.push(selectRes[i]); // save rows to calculate total price later
+            var row = [];
             for (var key in selectRes[i]) {
-                process.stdout.write(selectRes[i][key] + "\t");
+                if (key === "price") {
+                    row.push("$" + selectRes[i][key].toFixed(2));
+                }
+                else row.push(selectRes[i][key]);
             }
-            console.log();
+            table.push(row);
         }
+        console.log(table.toString()); // console log the entire cli table
         inquirer.prompt(questions).then(function(answers) {
             if ((answers.id.match(/q/i)) || (answers.quantity.match(/q/i))) {
                 connection.end();
@@ -56,7 +70,7 @@ function runCustomer(query) {
             connection.query(
                     "UPDATE products " +
                     "SET product_sales = (product_sales + ?), " +
-                    "stock_quantity = (stock_quantity - ?) " +
+                        "stock_quantity = (stock_quantity - ?) " +
                     "WHERE item_id = ? AND stock_quantity >= ?",
                     [ totalPrice, quantity, id, quantity ],
                     function(updateErr, updateRes) {
@@ -71,8 +85,3 @@ function runCustomer(query) {
 
 
 runCustomer();
-
-
-
-
-
