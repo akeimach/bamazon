@@ -63,7 +63,7 @@ function runSupervisor() {
                         "b.department_name, " +
                         "b.over_head_costs, " +
                         "a.total_product_sales, " +
-                        "b.over_head_costs - a.total_product_sales AS total_profit " +
+                        "a.total_product_sales - b.over_head_costs AS total_profit " +
                     "FROM (SELECT department_name, " +
                             "SUM(product_sales) AS total_product_sales " +
                             "FROM products GROUP BY department_name) a " +
